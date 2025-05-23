@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Design Thinking Education - Shoe Design</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- html2pdf.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;400&display=swap" rel="stylesheet">
+  <style>
+    html {
+      font-size: 16px;
+    }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: linear-gradient(135deg, #f6f6f6 60%, #fbd46d 100%);
+      min-height: 100vh;
+      transition: background 0.5s;
+      position: relative;
+    }
+    .dark body {
+      background: linear-gradient(135deg, #232931 60%, #393e46 100%);
+    }
+    .glass {
+      background: rgba(255,255,255,0.55);
+      box-shadow: 0 4px 32px 0 rgba(31, 38, 135, 0.09);
+      backdrop-filter: blur(8px);
+      border-radius: 1.5rem;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      transition: background 0.4s, border 0.4s;
+    }
+    .dark .glass {
+      background: rgba(35,41,49,0.70);
+      box-shadow: 0 4px 32px 0 rgba(0,0,0,0.25);
+      border: 1.5px solid rgba(238,238,238,0.12);
+    }
+    .neumorph {
+      box-shadow: 6px 6px 14px #e0e0e0, -6px -6px 14px #ffffff;
+      background: #f6f6f6;
+      border-radius: 1.5rem;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    .dark .neumorph {
+      box-shadow: 6px 6px 14px #191c20, -6px -6px 14px #2d3238;
+      background: #232931;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.2rem;
+      height: 1.2rem;
+      border-radius: 50%;
+      background: #4F8A8B;
+      box-shadow: 0 0 2px #262A2E33;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .slider:focus::-webkit-slider-thumb {
+      outline: 2px solid #FBD46D;
+    }
+    .dark .slider::-webkit-slider-thumb {
+      background: #F05454;
+    }
+    .slider::-moz-range-thumb {
+      width: 1.2rem;
+      height: 1.2rem;
+      border-radius: 50%;
+      background: #4F8A8B;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .dark .slider::-moz-range-thumb {
+      background: #F05454;
+    }
+    .slider {
+      width: 100%;
+      accent-color: #4F8A8B;
+      transition: accent-color 0.3s;
+    }
+    .dark .slider {
+      accent-color: #F05454;
+    }
+    /* Subtle noise overlay for texture */
+    body::before {
+      content: "";
+      pointer-events: none;
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: url('https://www.transparenttextures.com/patterns/noise.png');
+      opacity: 0.045;
+      z-index: 1;
+    }
+    .dark body::before {
+      opacity: 0.075;
+    }
+    /* Responsive logo space */
+    .logo-placeholder {
+      width: 180px;
+      height: 320px;
+      background: linear-gradient(135deg, #fbd46d 60%, #4f8a8b 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1.25rem;
+      box-shadow: 0 4px 24px 0 rgba(0,0,0,0.12);
+      margin: 0 auto;
+      overflow: hidden;
+    }
+    .dark .logo-placeholder {
+      background: linear-gradient(135deg, #393e46 60%, #232931 100%);
+      box-shadow: 0 4px 24px 0 rgba(0,0,0,0.25);
+    }
+    .logo-placeholder img {
+      object-fit: contain;
+      width: 100%;
+      height: 100%;
+      opacity: 0.82;
+    }
+    /* Animations */
+    @keyframes float {
+      0% { transform: translateY(0px);}
+      50%{ transform: translateY(-16px);}
+      100%{ transform: translateY(0px);}
+    }
+    .float-anim {
+      animation: float 5s infinite cubic-bezier(.68,-0.55,.27,1.55);
+    }
+    /* Chart/table container for pdf export */
+    #visualization-area {
+      min-height: 350px;
+      background: transparent;
+      padding-top: 2rem;
+    }
+    /* Accessible focus styles */
+    .focus-ring:focus {
+      outline: 2px solid #FBD46D;
+      outline-offset: 2px;
+    }
+    /* Scrollbar styling for cards */
+    ::-webkit-scrollbar {
+      width: 7px;
+      background: #f6f6f6;
+      border-radius: 7px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #fbd46d;
+      border-radius: 7px;
+    }
+    .dark ::-webkit-scrollbar {
+      background: #232931;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #f05454;
+    }
+  </style>
+</head>
+<body class=" min-h-screen text-[#262A2E] dark:text-[#EEEEEE] transition-colors duration-500">
+  <div class="z-10 relative">
+    <!-- Header -->
+    <header class="w-full flex flex-col items-center py-8">
+      <!-- Logo Placeholder -->
+      <div class="logo-placeholder mb-4 float-anim glass" aria-label="Logo placeholder" style="width: 320px; height: 180px;">
+        <img src=image.png alt="Logo Placeholder" />
+      </div>
+      <div class="flex items-center justify-between w-full max-w-4xl px-6">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight neumorph px-6 py-3">
+          Design Thinking Education <span class="text-[#4f8a8b] dark:text-[#F05454]">- Shoe Design</span>
+        </h1>
+        <!-- Dark/Light Mode Toggle -->
+        <button id="mode-toggle" aria-label="Toggle dark mode" class="ml-6 rounded-full w-12 h-12 flex items-center justify-center glass focus-ring transition-all duration-300 shadow-lg">
+          <span id="mode-icon" class="text-2xl">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex flex-col items-center">
+      <!-- Cards Grid -->
+      <section class="w-full max-w-6xl px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-4">
+        <!-- Cards will be inserted by JS -->
+      </section>
+
+      <!-- Visualization Area -->
+      <section class="w-full max-w-5xl px-2 mt-12">
+        <div class="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
+          <div class="flex gap-2 items-center">
+            <label class="font-semibold text-lg" for="viz-switch">Visualization:</label>
+            <select id="viz-switch" class="glass px-4 py-2 rounded-xl focus-ring shadow appearance-none dark:bg-[#232931] dark:text-[#EEEEEE]">
+              <option value="bar">Bar Chart</option>
+              <option value="radar">Radar Chart</option>
+              <option value="table">Data Table</option>
+            </select>
+          </div>
+          <button id="export-pdf" class="flex items-center glass px-6 py-3 rounded-xl font-semibold shadow hover:scale-105 transition-transform focus-ring dark:bg-[#232931] dark:text-[#FBD46D] text-[#4F8A8B] gap-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            Export as PDF
+          </button>
+        </div>
+        <div id="visualization-area" class="glass px-3 py-6 rounded-3xl shadow-lg mt-2 dark:bg-[#232931]/70">
+          <!-- Chart or Table will be inserted here -->
+          <canvas id="feedbackChart" height="320"></canvas>
+          <div id="feedbackTable" class="hidden overflow-x-auto"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full flex flex-col items-center justify-center mt-16 mb-4">
+      <div class="text-xs text-[#4f8a8b] dark:text-[#FBD46D] opacity-80">© 2024 Design Thinking Education. Crafted for creativity.</div>
+    </footer>
+  </div>
+
+  <script>
+    // ---- CONFIGURATION ----
+    const clients = [
+      { id: 'A', name: 'Client A' },
+      { id: 'B', name: 'Client B' },
+      { id: 'C', name: 'Client C' },
+      { id: 'D', name: 'Client D' }
+    ];
+    const questions = [
+      "Do you feel the designers care about you?",
+      "Do you feel the designers understood you?",
+      "Do you feel comfortable sharing your true thoughts to the designers?",
+      "Do you feel the designers being frustrated by your feedback?"
+    ];
+    // For extensibility: if you want to add more teams/clients, just add them here.
+
+    // ---- DATA STORAGE ----
+    let feedbackData = {};
+    clients.forEach(cl => {
+      feedbackData[cl.id] = [5, 5, 5, 5]; // Default to mid value
+    });
+
+    // ---- UI GENERATION ----
+    const cardColors = [
+      "bg-[#4F8A8B]/[.09] dark:bg-[#F05454]/[.10]",
+      "bg-[#FBD46D]/[.09] dark:bg-[#393E46]/[.10]",
+      "bg-[#6BCB77]/[.10] dark:bg-[#4F8A8B]/[.10]",
+      "bg-[#F67280]/[.10] dark:bg-[#FBD46D]/[.10]"
+    ];
+
+    function renderCards() {
+      const container = document.querySelector('main section');
+      container.innerHTML = "";
+      clients.forEach((cl, idx) => {
+        const card = document.createElement('div');
+        card.className = `glass shadow-md px-6 py-7 flex flex-col items-center ${cardColors[idx % cardColors.length]} relative`;
+        card.setAttribute('aria-label', `${cl.name} Pressure Meter`);
+        // Card Title
+        card.innerHTML += `
+          <div class="absolute top-3 right-6 text-xl font-bold text-[#4F8A8B] dark:text-[#F05454] opacity-80">${cl.id}</div>
+          <h2 class="text-xl font-bold mb-4">${cl.name} <span class="text-sm font-normal text-[#888] dark:text-[#EEE]/60">Pressure Meter</span></h2>
+        `;
+        // Questions
+        questions.forEach((q, qi) => {
+          const value = feedbackData[cl.id][qi];
+          card.innerHTML += `
+            <div class="w-full mb-6 flex flex-col">
+              <label class="mb-2 font-semibold text-sm" for="slider-${cl.id}-${qi}">${q}</label>
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-mono text-[#4F8A8B] dark:text-[#FBD46D]">0</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  step="1"
+                  value="${value}"
+                  id="slider-${cl.id}-${qi}"
+                  class="slider flex-1 focus-ring"
+                  aria-valuenow="${value}"
+                  aria-valuemin="0"
+                  aria-valuemax="10"
+                  aria-label="${q} for ${cl.name}"
+                  data-client="${cl.id}"
+                  data-question="${qi}"
+                >
+                <span class="slider-value text-base px-3 py-px font-bold text-[#F05454] dark:text-[#FBD46D]" id="slider-value-${cl.id}-${qi}">${value}</span>
+                <span class="text-xs font-mono text-[#4F8A8B] dark:text-[#FBD46D]">10</span>
+              </div>
+            </div>
+          `;
+        });
+        container.appendChild(card);
+      });
+    }
+
+    renderCards();
+
+    // ---- SLIDER EVENT HANDLING ----
+    document.querySelectorAll('.slider').forEach(slider => {
+      slider.addEventListener('input', e => {
+        const cl = slider.dataset.client;
+        const qi = parseInt(slider.dataset.question);
+        const value = parseInt(slider.value);
+        feedbackData[cl][qi] = value;
+        document.getElementById(`slider-value-${cl}-${qi}`).textContent = value;
+        slider.setAttribute('aria-valuenow', value);
+        updateCharts();
+      });
+    });
+
+    // Also update event listeners after render
+    function updateSliderListeners() {
+      document.querySelectorAll('.slider').forEach(slider => {
+        slider.oninput = e => {
+          const cl = slider.dataset.client;
+          const qi = parseInt(slider.dataset.question);
+          const value = parseInt(slider.value);
+          feedbackData[cl][qi] = value;
+          document.getElementById(`slider-value-${cl}-${qi}`).textContent = value;
+          slider.setAttribute('aria-valuenow', value);
+          updateCharts();
+        };
+      });
+    }
+    updateSliderListeners();
+
+    // ---- CHARTS AND VISUALIZATION ----
+    const ctx = document.getElementById('feedbackChart').getContext('2d');
+    let chartInstance = null;
+
+    function getAverages() {
+      // Returns [ avgQ1, avgQ2, avgQ3, avgQ4 ]
+      const avgs = [];
+      for (let qi=0; qi<questions.length; qi++) {
+        let sum = 0;
+        clients.forEach(cl => sum += Number(feedbackData[cl.id][qi]));
+        avgs.push((sum/clients.length).toFixed(2));
+      }
+      return avgs;
+    }
+
+    function getTableHTML() {
+      let html = `<table class="min-w-full border-collapse text-center text-base">
+        <thead>
+          <tr>
+            <th class="py-2 px-4 border-b border-[#ddd] dark:border-[#393E46]">Client</th>
+            ${questions.map(q=>`<th class="py-2 px-4 border-b border-[#ddd] dark:border-[#393E46]">${q}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${clients.map(cl=>`
+            <tr>
+              <td class="py-2 px-4 border-b border-[#eee] dark:border-[#393E46] font-bold">${cl.name}</td>
+              ${feedbackData[cl.id].map(val=>`<td class="py-2 px-4 border-b border-[#eee] dark:border-[#393E46]">${val}</td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td class="py-2 px-4 font-bold bg-[#fbd46d]/10 dark:bg-[#393E46]/40">Average</td>
+            ${getAverages().map(avg=>`<td class="py-2 px-4 font-bold bg-[#fbd46d]/10 dark:bg-[#393E46]/40">${avg}</td>`).join('')}
+          </tr>
+        </tfoot>
+      </table>`;
+      return html;
+    }
+
+    function renderChart(type='bar') {
+      // Remove previous chart if exists
+      if (chartInstance) {
+        chartInstance.destroy();
+      }
+      document.getElementById('feedbackChart').classList.remove('hidden');
+      document.getElementById('feedbackTable').classList.add('hidden');
+      // Data
+      const avgs = getAverages();
+      const colors = ['#4F8A8B', '#FBD46D', '#F05454', '#6BCB77'];
+      const darkColors = ['#F05454', '#FBD46D', '#4F8A8B', '#F67280'];
+      const isDark = document.documentElement.classList.contains('dark');
+      // Chart.js config
+      let config = {};
+      if (type==='bar') {
+        config = {
+          type: 'bar',
+          data: {
+            labels: questions,
+            datasets: [{
+              label: 'Average Score',
+              data: avgs,
+              backgroundColor: isDark ? darkColors : colors,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              borderColor: "#eee"
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              title: { display: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 10,
+                ticks: { color: isDark ? "#EEEEEE" : "#262A2E", font: { size: 16, weight: 700 } }
+              },
+              x: {
+                ticks: { color: isDark ? "#EEEEEE" : "#262A2E", font: { size: 14 } }
+              }
+            },
+            animation: { duration: 800, easing: 'easeOutCubic' }
+          }
+        }
+      } else if (type==='radar') {
+        config = {
+          type: 'radar',
+          data: {
+            labels: questions,
+            datasets: [{
+              label: "Average Score",
+              data: avgs,
+              fill: true,
+              backgroundColor: isDark ? "rgba(240,84,84,0.25)" : "rgba(79,138,139,0.2)",
+              borderColor: isDark ? "#F05454" : "#4F8A8B",
+              pointBackgroundColor: isDark ? "#FBD46D" : "#F05454",
+              pointBorderColor: "#fff",
+              pointHoverBackgroundColor: "#fff",
+              pointHoverBorderColor: isDark ? "#FBD46D" : "#F05454"
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              title: { display: false }
+            },
+            scales: {
+              r: {
+                beginAtZero: true,
+                min: 0, max: 10, stepSize: 2,
+                angleLines: { color: isDark ? "#EEE2" : "#2222" },
+                grid: { color: isDark ? "#EEE1" : "#2221" },
+                pointLabels: { color: isDark ? "#EEEEEE" : "#262A2E", font: { size: 13 } },
+                ticks: { color: isDark ? "#EEEEEE" : "#262A2E", stepSize: 2, font: { size: 12 } }
+              }
+            },
+            animation: { duration: 900, easing: 'easeOutExpo' }
+          }
+        }
+      }
+      chartInstance = new Chart(ctx, config);
+    }
+
+    function renderTable() {
+      document.getElementById('feedbackChart').classList.add('hidden');
+      document.getElementById('feedbackTable').classList.remove('hidden');
+      document.getElementById('feedbackTable').innerHTML = getTableHTML();
+    }
+
+    function updateCharts() {
+      const val = document.getElementById('viz-switch').value;
+      if (val === 'bar' || val === 'radar') {
+        renderChart(val);
+      } else {
+        renderTable();
+      }
+    }
+
+    updateCharts();
+
+    // ---- VISUALIZATION SWITCH ----
+    document.getElementById('viz-switch').addEventListener('change', updateCharts);
+
+    // ---- DARK/LIGHT MODE HANDLING ----
+    const modeToggle = document.getElementById('mode-toggle');
+    const modeIcon = document.getElementById('mode-icon');
+    function applyMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      modeIcon.textContent = isDark ? "☀️" : "🌙";
+      // Re-render chart with correct colors
+      updateCharts();
+    }
+    modeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      applyMode();
+    });
+    // Prefer system dark mode
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+      applyMode();
+    }
+
+    // ---- PDF EXPORT LOGIC ----
+    document.getElementById('export-pdf').addEventListener('click', async () => {
+      // Prepare area
+      const vizArea = document.getElementById('visualization-area');
+      // Switch to white background for export
+      vizArea.style.background = '#fff';
+      // Use html2pdf
+      const opt = {
+        margin:       0.3,
+        filename:     'shoe-design-feedback.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, backgroundColor: '#fff' },
+        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      };
+      // Temporarily switch chart to light mode for PDF if in dark mode
+      let switched = false;
+      if (document.documentElement.classList.contains('dark')) {
+        document.documentElement.classList.remove('dark');
+        applyMode();
+        switched = true;
+        await new Promise(res=>setTimeout(res,250)); // Wait for chart to redraw
+      }
+      html2pdf().set(opt).from(vizArea).save().then(()=>{
+        if (switched) {
+          document.documentElement.classList.add('dark');
+          applyMode();
+        }
+        vizArea.style.background = '';
+      });
+    });
+
+    // ---- RESPONSIVE: Re-render cards and listeners on resize (for screen size issues) ----
+    window.addEventListener('resize', () => {
+      renderCards(); updateSliderListeners();
+    });
+
+    // ---- INIT ----
+    // Ensure everything works after dynamic rendering
+    function init() {
+      renderCards(); updateSliderListeners(); updateCharts();
+      applyMode();
+    }
+    init();
+
+    // Ensure color on all elements changes with dark/light mode
+    document.addEventListener('DOMContentLoaded', () => {
+      applyMode();
+    });
+
+  </script>
+</body>
+</html>
