@@ -1,611 +1,852 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Design Thinking Education - Pressure Meter</title>
-  <!-- Tailwind CSS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>HKU - Design Thinking Education - Client Pressure Meter Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- AOS (Animate on Scroll) -->
-  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <!-- GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <!-- JSZip for export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <!-- FileSaver.js for export -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <link rel="icon" href="https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/external-shoe-footwear-flatart-icons-outline-flatarticons.png" />
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <style>
-    html, body { height: 100%; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
-    .neu-card {
-      background: var(--neu-bg);
-      box-shadow: 8px 8px 24px var(--neu-shadowD), -8px -8px 24px var(--neu-shadowL);
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { min-height: 100vh; font-family: 'Inter', sans-serif; transition: background 0.3s; }
+    .neumorphic {
+      background: var(--neu-bg, #f0f4f9);
+      box-shadow: 8px 8px 20px #d1d9e6, -8px -8px 20px #ffffff;
+      border-radius: 2rem;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    [data-theme="dark"] .neumorphic {
+      background: var(--neu-bg-dark, #202737);
+      box-shadow: 8px 8px 20px #181c25, -8px -8px 20px #27314d;
+    }
+    .glass {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(14px);
       border-radius: 1.5rem;
-      border: 1.5px solid var(--neu-border);
-      transition: background 0.5s, box-shadow 0.5s, border 0.5s;
-      position: relative;
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: background 0.3s;
     }
-    .neu-card[data-aos] { transition: background 0.5s, box-shadow 0.5s, border 0.5s, transform 0.3s; }
-    .neu-card .neu-header {
-      font-weight: 600;
-      font-size: 1.3rem;
-      letter-spacing: 1px;
-      color: var(--neu-text);
-      text-shadow: 0 2px 8px var(--neu-shadowL);
+    [data-theme="dark"] .glass {
+      background: rgba(30,41,59,0.35);
+      border: 1px solid rgba(60,80,120,0.23);
     }
-    :root[data-theme='light'] {
-      --neu-bg: #f6f8fa;
-      --neu-shadowD: #d9dde2;
-      --neu-shadowL: #ffffff;
-      --neu-border: #e7ebf0;
-      --neu-text: #2d3748;
-      --neu-text2: #687587;
-      --neu-accent: #2f80ed;
-      --neu-accent2: #27ae60;
-      --neu-danger: #e74c3c;
-      --neu-gray: #e2e8f0;
-      --neu-subtle: #8ea2b6;
-      --neu-meter1: #2f80ed;
-      --neu-meter2: #e67e22;
-      --neu-meter3: #27ae60;
-      --neu-bg-card: #ffffffcc;
-      --neu-bg-blur: rgba(246,248,250,0.7);
-      --neu-switch: #d1d5db;
+    .active-step {
+      box-shadow: 0 0 0 4px #3B82F6, 8px 8px 20px #d1d9e6, -8px -8px 20px #ffffff !important;
     }
-    :root[data-theme='dark'] {
-      --neu-bg: #22272e;
-      --neu-shadowD: #1a1d22;
-      --neu-shadowL: #31363c;
-      --neu-border: #31363c;
-      --neu-text: #e2e8f0;
-      --neu-text2: #a0aec0;
-      --neu-accent: #2196f3;
-      --neu-accent2: #2ecc71;
-      --neu-danger: #e74c3c;
-      --neu-gray: #333840;
-      --neu-subtle: #8ea2b6;
-      --neu-meter1: #64b5f6;
-      --neu-meter2: #ffb74d;
-      --neu-meter3: #81c784;
-      --neu-bg-card: #23272eec;
-      --neu-bg-blur: rgba(34,39,46,0.7);
-      --neu-switch: #4b5563;
+    [data-theme="dark"] .active-step {
+      box-shadow: 0 0 0 4px #60A5FA, 8px 8px 20px #181c25, -8px -8px 20px #27314d !important;
     }
     .noise-bg::before {
       content: "";
-      position: absolute;
-      inset: 0;
       pointer-events: none;
-      opacity: 0.08;
-      z-index: 1;
-      background: url('https://grainy-gradients.vercel.app/noise.svg');
-      mix-blend-mode: multiply;
-      animation: noiseMove 12s infinite linear;
+      position: fixed;
+      top:0;left:0;width:100vw;height:100vh;
+      opacity:.09;
+      z-index: 0;
+      background-image: url('https://cdn.jsdelivr.net/gh/adamgiebl/noise@main/noise.png');
+      mix-blend-mode: overlay;
     }
-    @keyframes noiseMove {
-      0% { background-position: 0 0; }
-      100% { background-position: 100px 100px; }
+    h1 { font-size: clamp(2.5rem, 5vw, 3.5rem); }
+    h2 { font-size: clamp(1.2rem, 3vw, 1.7rem);}
+    label { font-size: 1rem;}
+    .fade-in { animation: fadein 0.8s cubic-bezier(.4,0,.2,1);}
+    @keyframes fadein { 0%{opacity:0;transform:translateY(30px);} 100%{opacity:1;transform:translateY(0);} }
+    .visually-hidden { position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;}
+    input[type='number']::-webkit-inner-spin-button, input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0;}
+    input[type='number'] { -moz-appearance: textfield;}
+    ::-webkit-scrollbar { width: 10px; background: #e5e7eb; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 1rem; }
+    [data-theme="dark"] ::-webkit-scrollbar { background: #202737; }
+    [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #27314d; }
+    /* Fullscreen modal for chart */
+    #fullscreen-graph-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(30,41,59,0.93);
+      align-items: center; justify-content: center;
     }
-    .bg-animated {
-      background: linear-gradient(120deg, #e0e7ff 0%, #f6f8fa 90%);
-      background-size: 400% 400%;
-      animation: gradientBG 18s ease-in-out infinite;
+    #fullscreen-graph-modal.active { display: flex; }
+    #fullscreen-graph-modal-inner {
+      background: #fff;
+      border-radius: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.20);
+      padding: 2vw;
+      max-width: 98vw;
+      max-height: 98vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
     }
-    [data-theme='dark'] .bg-animated {
-      background: linear-gradient(120deg, #23272e 0%, #3b4252 100%);
-      background-size: 400% 400%;
-      animation: gradientBG 18s ease-in-out infinite;
+    [data-theme="dark"] #fullscreen-graph-modal-inner {
+      background: #151a26;
     }
-    @keyframes gradientBG {
-      0%,100% {background-position:0% 50%;}
-      50% {background-position:100% 50%;}
-    }
-    .glass-card {
-      background: var(--neu-bg-blur);
-      backdrop-filter: blur(12px) saturate(1.3);
-      -webkit-backdrop-filter: blur(12px) saturate(1.3);
-      border-radius: 1.5rem;
-      border: 1.5px solid var(--neu-border);
-      box-shadow: 0 6px 30px 0 var(--neu-shadowD);
-      transition: background 0.5s;
-    }
-    .switch-wrapper { display: flex; align-items: center; gap: 0.5em; }
-    .switch-label { font-size: 1rem; color: var(--neu-text2); font-weight: 500; }
-    .switch { position: relative; width: 58px; height: 32px; display: inline-block; }
-    .switch input { display:none; }
-    .slider {
+    #fullscreen-graph-modal-close {
       position: absolute;
+      top: 1rem; right: 1rem;
+      font-size: 2rem;
       cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: var(--neu-switch);
-      border-radius: 16px;
-      box-shadow: 0 2px 8px var(--neu-shadowD);
-      transition: background-color 0.3s;
-    }
-    .slider:before {
-      content: "";
-      position: absolute;
-      left: 6px; top: 6px;
-      height: 20px; width: 20px;
-      background: var(--neu-accent);
-      border-radius: 50%;
-      transition: .3s;
-      box-shadow: 0 2px 8px var(--neu-shadowL);
-    }
-    input:checked + .slider:before {
-      transform: translateX(26px);
-      background: var(--neu-accent2);
-    }
-    .chart-card {
-      background: var(--neu-bg-blur);
-      border-radius: 1.5rem;
-      border: 1.5px solid var(--neu-border);
-      box-shadow: 0 6px 30px 0 var(--neu-shadowD);
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    h1 {
-      font-size: clamp(2.2rem, 4vw, 3.4rem);
-      font-weight: 700;
-      color: var(--neu-accent);
-      letter-spacing: -1px;
-    }
-    h2 {
-      font-size: clamp(1.3rem, 2vw, 2rem);
-      font-weight: 600;
-      color: var(--neu-text);
-    }
-    .gradient-text {
-      background: linear-gradient(90deg, var(--neu-accent), var(--neu-accent2), var(--neu-meter2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .fade-in { opacity: 0; animation: fadeIn 1s ease-in forwards; }
-    @keyframes fadeIn { to { opacity: 1; } }
-    .visually-hidden { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
-    .meter-bar {
-      height: 14px;
-      border-radius: 8px;
-      background: linear-gradient(90deg, var(--neu-meter1) 0%, var(--neu-meter2) 100%);
-      transition: width 0.6s cubic-bezier(.4,2,.6,1), background 0.4s;
-    }
-    .meter-bar.frustration { background: linear-gradient(90deg, var(--neu-danger) 0%, var(--neu-meter2) 100%);}
-    .btn-export {
-      background: linear-gradient(90deg, var(--neu-accent), var(--neu-accent2));
-      color: #fff;
-      font-weight: 600;
+      color: #64748b;
+      background: rgba(255,255,255,0.7);
       border: none;
-      border-radius: 999px;
-      padding: 0.6em 1.8em;
-      box-shadow: 0 4px 18px 0 var(--neu-shadowD);
-      transition: box-shadow 0.2s, background 0.3s;
+      border-radius: 50%;
+      width: 2.5rem; height: 2.5rem;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10;
+      transition: background 0.2s;
     }
-    .btn-export:hover {
-      box-shadow: 0 8px 32px 0 var(--neu-shadowL);
-      background: linear-gradient(90deg, var(--neu-accent2), var(--neu-accent));
+    #fullscreen-graph-modal-close:hover {
+      background: #ef4444; color: #fff;
     }
-    @media (max-width: 900px) {
-      .cards-flex { flex-direction: column; gap: 2.4rem;}
+    #fullscreen-graph-modal button#save-fullscreen-graph {
+      margin-top: 1rem;
+      background: #3B82F6;
+      color: #fff;
+      border-radius: 1rem;
+      padding: 0.5rem 1.5rem;
+      font-weight: bold;
+      border: none;
+      font-size: 1.1rem;
+      box-shadow: 0 3px 6px rgba(59,130,246,0.13);
+      cursor: pointer;
+      transition: background 0.2s;
     }
-    @media (max-width: 600px) {
-      .neu-card, .glass-card, .chart-card {padding: 1rem;}
-      h1 {font-size:2rem;}
-      h2 {font-size:1.1rem;}
+    #fullscreen-graph-modal button#save-fullscreen-graph:hover {
+      background: #2563eb;
     }
   </style>
 </head>
-<body class="bg-animated min-h-screen w-full relative noise-bg">
-  <!-- HEADER -->
-  <header class="w-full pt-8 pb-4 px-4 flex flex-col items-center fade-in" style="z-index:2; position:relative;">
-    <h1 class="gradient-text text-center mb-2" aria-label="Design Thinking Education - Pressure Meter">Design Thinking Education<br><span class="gradient-text">Pressure Meter</span></h1>
-    <div class="flex flex-wrap gap-4 items-center mt-2">
-      <div class="switch-wrapper">
-        <span class="switch-label">🌙</span>
-        <label class="switch">
-          <input type="checkbox" id="darkmode-toggle" aria-label="Toggle dark and light mode"/>
-          <span class="slider"></span>
-        </label>
-        <span class="switch-label">☀️</span>
-      </div>
-      <div class="switch-wrapper ml-4">
-        <span class="switch-label">Values</span>
-        <label class="switch">
-          <input type="checkbox" id="view-toggle" aria-label="Toggle between value input and visualisation"/>
-          <span class="slider"></span>
-        </label>
-        <span class="switch-label">Visualisation</span>
-      </div>
-      <button class="btn-export ml-4" id="exportBtn" aria-label="Export data and visualisations">
-        <svg class="inline mr-2" width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 12l-4-4m4 4l4-4"/><rect x="4" y="16" width="16" height="4" rx="2"/></svg>
-        Export
-      </button>
+<body class="noise-bg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800 transition-colors duration-500">
+<div id="particles-js" class="fixed inset-0 z-0"></div>
+
+<!-- HEADER -->
+<header class="relative z-10 flex justify-between items-center px-6 py-4 shadow-none">
+  <div class="flex items-center gap-4">
+    <img src="https://img.icons8.com/emoji/48/000000/running-shoe-emoji.png" alt="Shoe" class="w-12 h-12 drop-shadow-lg">
+    <h1 class="font-extrabold tracking-tight text-slate-800 dark:text-slate-100">Client Pressure-Meter</h1>
+  </div>
+  <div class="flex gap-3 items-center">
+    <button aria-label="Toggle Dark Mode" id="toggle-dark" class="w-12 h-12 neumorphic flex items-center justify-center transition-colors">
+      <span id="theme-icon" class="text-yellow-400 text-2xl">🌞</span>
+    </button>
+    <button id="export-csv" class="px-4 py-2 rounded-xl neumorphic text-blue-700 dark:text-blue-200 font-bold shadow hover:scale-105 transition-all">Export CSV</button>
+    <button id="export-png" class="px-4 py-2 rounded-xl neumorphic text-pink-700 dark:text-pink-200 font-bold shadow hover:scale-105 transition-all">Save Graphs</button>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="relative z-10 px-3 sm:px-6 py-4 max-w-5xl mx-auto">
+
+  <!-- Stepper: Checkpoint navigation -->
+  <section class="mb-6 fade-in">
+    <div class="flex flex-wrap gap-2 justify-center items-center">
+      <template id="step-btn-template">
+        <button class="px-4 py-2 neumorphic font-semibold transition-all"></button>
+      </template>
+      <div id="stepper" class="flex gap-1 w-full justify-center"></div>
+      <span id="step-desc" class="block text-center mt-2 text-slate-500 dark:text-slate-400"></span>
     </div>
-  </header>
-  <main class="max-w-7xl mx-auto w-full px-3 py-4 fade-in" style="z-index:2; position:relative;">
-    <section id="valuesView" class="cards-flex flex flex-row gap-8 justify-center items-stretch flex-wrap">
-      <!-- Client Cards will be rendered here -->
-    </section>
-    <section id="visualisationView" class="hidden mt-6">
-      <div class="flex flex-col gap-10">
-        <div class="chart-card" id="chart-overall-container">
-          <h2 class="mb-2 gradient-text">All Clients: Average Scores by Checkpoint</h2>
-          <canvas id="chart-overall" height="120"></canvas>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="chart-card" id="chart-clientA-container">
-            <h2 class="mb-2 gradient-text">Client A</h2>
-            <canvas id="chart-clientA" height="120"></canvas>
-          </div>
-          <div class="chart-card" id="chart-clientB-container">
-            <h2 class="mb-2 gradient-text">Client B</h2>
-            <canvas id="chart-clientB" height="120"></canvas>
-          </div>
-          <div class="chart-card" id="chart-clientC-container">
-            <h2 class="mb-2 gradient-text">Client C</h2>
-            <canvas id="chart-clientC" height="120"></canvas>
-          </div>
-        </div>
+  </section>
+
+  <!-- Editable names -->
+  <section class="mb-6 fade-in flex flex-col md:flex-row gap-6 justify-between">
+    <div class="neumorphic px-5 py-4 flex-1 min-w-[250px]">
+      <h2 class="font-bold mb-2 text-blue-600 dark:text-blue-300">Clients</h2>
+      <div id="client-names" class="flex flex-col gap-3"></div>
+    </div>
+    <div class="neumorphic px-5 py-4 flex-1 min-w-[250px]">
+      <h2 class="font-bold mb-2 text-pink-600 dark:text-pink-200">Teams per Client</h2>
+      <div id="team-names" class="flex flex-col gap-3"></div>
+    </div>
+  </section>
+
+  <!-- Data Entry for Current Checkpoint -->
+  <section id="entry-section" class="mb-8 fade-in">
+    <h2 class="font-semibold mb-3 text-slate-700 dark:text-slate-200 text-lg text-center">Enter Feedback: <span id="entry-checkpoint" class="font-bold text-blue-600 dark:text-blue-300"></span></h2>
+    <div id="data-entry-cards" class="grid sm:grid-cols-2 gap-6"></div>
+    <div class="flex gap-4 justify-center mt-6">
+      <button id="prev-step" class="px-4 py-2 rounded-xl neumorphic font-semibold text-slate-600 dark:text-slate-300 shadow hover:scale-105 transition-all">⬅️ Previous</button>
+      <button id="next-step" class="px-4 py-2 rounded-xl neumorphic font-semibold text-slate-600 dark:text-slate-300 shadow hover:scale-105 transition-all">Next ➡️</button>
+    </div>
+  </section>
+
+  <!-- Output Switch -->
+  <section class="fade-in mb-4 flex justify-center gap-4">
+    <button id="show-table" class="px-4 py-2 rounded-xl neumorphic font-semibold text-blue-700 dark:text-blue-300 shadow active-step">Table</button>
+    <button id="show-chart" class="px-4 py-2 rounded-xl neumorphic font-semibold text-pink-700 dark:text-pink-200 shadow">Graphs</button>
+  </section>
+
+  <!-- Data Table -->
+  <section id="data-table-section" class="fade-in">
+    <h2 class="font-semibold text-slate-700 dark:text-slate-200 mb-2 text-lg">All Feedback Data</h2>
+    <div class="overflow-auto max-h-[350px] border rounded-2xl shadow glass p-2">
+      <table class="min-w-[600px] w-full text-sm">
+        <thead>
+          <tr class="bg-blue-100 dark:bg-blue-950 text-slate-700 dark:text-slate-200 font-bold">
+            <th class="py-2 px-3">Checkpoint</th>
+            <th class="py-2 px-3">Client</th>
+            <th class="py-2 px-3">Team</th>
+            <th class="py-2 px-3">Comfort Score</th>
+            <th class="py-2 px-3">Perceived Frustration</th>
+          </tr>
+        </thead>
+        <tbody id="data-table-body" class="bg-white dark:bg-slate-900/90"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Chart Section -->
+  <section id="chart-section" class="fade-in hidden">
+    <h2 class="font-semibold text-slate-700 dark:text-slate-200 mb-2 text-lg">Feedback Trends & Averages</h2>
+    <div class="grid gap-8 sm:grid-cols-2">
+      <div class="neumorphic p-4 shadow flex flex-col items-center">
+        <h3 class="font-bold mb-2 text-blue-700 dark:text-blue-200 text-base">Avg. Comfort per Checkpoint</h3>
+        <canvas id="comfortChart" width="400" height="250"></canvas>
       </div>
-    </section>
-  </main>
-  <footer class="w-full text-center py-6 text-base text-[var(--neu-text2)] font-medium fade-in" style="z-index:2; position:relative;">
-    © 2025 Design Thinking Education. Master of Education. Faculty of Education. HKU 
-  </footer>
-  <script>
-    const htmlEl = document.documentElement;
-    const darkToggle = document.getElementById('darkmode-toggle');
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      htmlEl.setAttribute('data-theme', 'dark');
-      darkToggle.checked = true;
-    }
-    darkToggle.addEventListener('change', () => {
-      htmlEl.setAttribute('data-theme', darkToggle.checked ? 'dark' : 'light');
-      setTimeout(() => updateChartsTheme(), 100);
-    });
+      <div class="neumorphic p-4 shadow flex flex-col items-center">
+        <h3 class="font-bold mb-2 text-pink-700 dark:text-pink-200 text-base">Avg. Perceived Frustration per Checkpoint</h3>
+        <canvas id="frustrationChart" width="400" height="250"></canvas>
+      </div>
+    </div>
+    <div class="neumorphic p-4 shadow mt-7 flex flex-col items-center">
+      <h3 class="font-bold mb-2 text-green-700 dark:text-green-200 text-base">Overall Means by Client</h3>
+      <canvas id="meanChart" width="700" height="200"></canvas>
+    </div>
+    <!-- NEW OVERALL AVG CHART -->
+    <div class="neumorphic p-4 shadow mt-7 flex flex-col items-center">
+      <div class="flex justify-between items-center w-full">
+        <h3 class="font-bold mb-2 text-indigo-700 dark:text-indigo-200 text-base">Average Comfort & Frustration (All Teams)</h3>
+        <button id="enlarge-overall-graph" title="Enlarge" class="ml-auto mr-0 mb-2 px-3 py-1 bg-blue-400 hover:bg-blue-600 text-white rounded-xl text-lg shadow focus:outline-none" style="display:inline-flex;align-items:center;gap:0.5rem">
+          <span>⛶</span> Enlarge
+        </button>
+      </div>
+      <canvas id="overallAvgChart" width="700" height="260"></canvas>
+    </div>
+  </section>
 
-    const CLIENTS = [
-      {id: 'A', name: 'Client A', color: 'var(--neu-meter1)', img: 'https://picsum.photos/seed/a1/120/120'},
-      {id: 'B', name: 'Client B', color: 'var(--neu-meter2)', img: 'https://picsum.photos/seed/b1/120/120'},
-      {id: 'C', name: 'Client C', color: 'var(--neu-meter3)', img: 'https://picsum.photos/seed/c1/120/120'}
-    ];
-    const CHECKPOINT_COUNT = 4;
-    const TEAMS_RANGE = [1,2,3];
-    const QUESTIONS = [
-      {
-        label: 'Do you feel comfortable sharing your true thoughts to the designers?',
-        key: 'comfortable',
-        icon: '🤝'
+  <!-- FULLSCREEN MODAL -->
+  <div id="fullscreen-graph-modal">
+    <div id="fullscreen-graph-modal-inner">
+      <button id="fullscreen-graph-modal-close" aria-label="Close">&times;</button>
+      <h3 class="font-bold mb-4 text-indigo-700 dark:text-indigo-200 text-xl text-center">Average Comfort & Frustration (All Teams)</h3>
+      <canvas id="overallAvgChartFullscreen" width="1500" height="600" style="max-width:90vw;max-height:70vh;"></canvas>
+      <button id="save-fullscreen-graph">Save as PNG</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- TEAM/CLIENT/ENTRY CARD TEMPLATE -->
+<template id="entry-card-template">
+  <div class="neumorphic p-6 shadow-lg flex flex-col gap-2 fade-in">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-2xl" data-avatar>🧑‍💼</span>
+      <div>
+        <div class="font-bold text-blue-700 dark:text-blue-200" data-client></div>
+        <div class="text-xs text-pink-700 dark:text-pink-200 font-semibold" data-team></div>
+      </div>
+    </div>
+    <div class="flex flex-col gap-3">
+      <label class="font-semibold" for="">1. Comfortable sharing true thoughts? <span class="text-xs text-slate-500">(0:Not at all, 10:Very!)</span></label>
+      <div class="flex items-center gap-2">
+        <input type="range" min="0" max="10" step="1" class="w-full accent-blue-500" data-q1>
+        <span class="font-bold text-blue-600 dark:text-blue-200 w-6 text-lg text-center" data-q1-val>0</span>
+      </div>
+      <label class="font-semibold" for="">2. Designers seem frustrated by your feedback? <span class="text-xs text-slate-500">(0:Not at all, 10:Very!)</span></label>
+      <div class="flex items-center gap-2">
+        <input type="range" min="0" max="10" step="1" class="w-full accent-pink-500" data-q2>
+        <span class="font-bold text-pink-600 dark:text-pink-200 w-6 text-lg text-center" data-q2-val>0</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+  window.addEventListener('DOMContentLoaded',() => {
+    particlesJS("particles-js", {
+      particles: {
+        number: { value: 32, density: { enable: true, value_area: 900 } },
+        color: { value: ["#3B82F6","#10B981","#FBBF24","#F472B6","#60A5FA","#34D399","#FDE68A","#F9A8D4"] },
+        shape: { type: "circle", stroke: { width: 0, color: "#000" } },
+        opacity: { value: 0.22, random: true },
+        size: { value: 8, random: true },
+        line_linked: { enable: false },
+        move: { enable: true, speed: 0.4, direction: "none", random: true, out_mode: "out" }
       },
-      {
-        label: 'Do you feel the designers being frustrated by your feedback?',
-        key: 'frustrated',
-        icon: '😬'
-      }
-    ];
+      interactivity: { detect_on: "canvas", events: { onhover: { enable: false }, onclick: { enable: false } } },
+      retina_detect: true
+    });
+  });
+</script>
+<script>
+const NUM_CHECKPOINTS = 4;
+const NUM_CLIENTS = 4;
+const TEAMS_PER_CLIENT = 2;
+const DEFAULT_CLIENT_NAMES = ['Client A','Client B','Client C','Client D'];
+const CLIENT_AVATARS = ['🧑‍💼','🧑‍🔬','🧑‍🏫','🧑‍🎨','🧑‍🚀','🧑‍🎤','🧑‍⚖️','🧑‍🌾'];
+const DEFAULT_TEAM_NAMES = [
+  ['Team 1','Team 2'],
+  ['Team 3','Team 4'],
+  ['Team 5','Team 6'],
+  ['Team 7','Team 8']
+];
 
-    let data = {};
-    CLIENTS.forEach(client => {
-      data[client.id] = { teams: 2, values: Array(3).fill().map(() => (
-          Array(CHECKPOINT_COUNT).fill().map(() => ({comfortable: '', frustrated: ''}))
-        ))
+// Data structure:
+// feedbackData[checkpoint][clientIdx][teamIdx] = { q1: int, q2: int }
+let feedbackData = Array.from({length: NUM_CHECKPOINTS}, () =>
+  Array.from({length: NUM_CLIENTS}, () =>
+    Array.from({length: TEAMS_PER_CLIENT}, () => ({q1: 0, q2: 0}))
+  )
+);
+let clientNames = [...DEFAULT_CLIENT_NAMES];
+let teamNames = DEFAULT_TEAM_NAMES.map(x=>[...x]);
+let currentCheckpoint = 0;
+
+// DOM Elements
+const stepper = document.getElementById('stepper');
+const stepDesc = document.getElementById('step-desc');
+const dataEntryCards = document.getElementById('data-entry-cards');
+const prevStepBtn = document.getElementById('prev-step');
+const nextStepBtn = document.getElementById('next-step');
+const entryCheckpoint = document.getElementById('entry-checkpoint');
+const clientNamesDiv = document.getElementById('client-names');
+const teamNamesDiv = document.getElementById('team-names');
+const dataTableSection = document.getElementById('data-table-section');
+const chartSection = document.getElementById('chart-section');
+const showTableBtn = document.getElementById('show-table');
+const showChartBtn = document.getElementById('show-chart');
+const dataTableBody = document.getElementById('data-table-body');
+const exportCsvBtn = document.getElementById('export-csv');
+const exportPngBtn = document.getElementById('export-png');
+
+const enlargeOverallGraphBtn = document.getElementById('enlarge-overall-graph');
+const fullscreenModal = document.getElementById('fullscreen-graph-modal');
+const fullscreenModalClose = document.getElementById('fullscreen-graph-modal-close');
+const fullscreenModalInner = document.getElementById('fullscreen-graph-modal-inner');
+const fullscreenOverallGraph = document.getElementById('overallAvgChartFullscreen');
+const saveFullscreenGraphBtn = document.getElementById('save-fullscreen-graph');
+
+function renderStepper() {
+  stepper.innerHTML = '';
+  for(let i=0;i<NUM_CHECKPOINTS;i++) {
+    const btn = document.createElement('button');
+    btn.className = 'px-4 py-2 neumorphic font-semibold transition-all';
+    btn.textContent = `Checkpoint ${i+1}`;
+    if(i===currentCheckpoint) btn.classList.add('active-step');
+    btn.setAttribute('aria-label',`Go to Checkpoint ${i+1}`);
+    btn.onclick = ()=>{currentCheckpoint=i; renderAll();}
+    stepper.appendChild(btn);
+  }
+  stepDesc.textContent = `Currently entering data for Checkpoint ${currentCheckpoint+1}`;
+}
+function renderClientNames() {
+  clientNamesDiv.innerHTML = '';
+  for(let i=0; i<NUM_CLIENTS; i++) {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-2';
+    row.innerHTML = `<span class="text-2xl">${CLIENT_AVATARS[i]}</span>
+      <input class="px-3 py-1 rounded-lg bg-blue-50 dark:bg-slate-800 text-slate-700 dark:text-slate-100 font-semibold w-32 focus:outline-none border focus:border-blue-400 transition"
+        type="text" value="${clientNames[i]}" aria-label="Client name ${i+1}">`;
+    const inp = row.querySelector('input');
+    inp.addEventListener('input',e=>{
+      clientNames[i]=inp.value.trim();
+      renderAll();
+    });
+    clientNamesDiv.appendChild(row);
+  }
+}
+function renderTeamNames() {
+  teamNamesDiv.innerHTML = '';
+  for(let i=0; i<NUM_CLIENTS; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex items-center gap-2 mb-1';
+    wrap.innerHTML = `<span class="text-sm font-semibold mr-2">${clientNames[i]}</span>
+      <input class="px-2 py-1 rounded-lg bg-pink-50 dark:bg-slate-800 text-pink-700 dark:text-pink-200 font-semibold w-24 focus:outline-none border focus:border-pink-400 transition"
+        type="text" value="${teamNames[i][0]}" aria-label="Team 1 for Client ${i+1}">
+      <input class="px-2 py-1 rounded-lg bg-pink-50 dark:bg-slate-800 text-pink-700 dark:text-pink-200 font-semibold w-24 focus:outline-none border focus:border-pink-400 transition"
+        type="text" value="${teamNames[i][1]}" aria-label="Team 2 for Client ${i+1}">`;
+    const inp1 = wrap.querySelectorAll('input')[0];
+    const inp2 = wrap.querySelectorAll('input')[1];
+    inp1.addEventListener('input',e=>{
+      teamNames[i][0]=inp1.value.trim();
+      renderAll();
+    });
+    inp2.addEventListener('input',e=>{
+      teamNames[i][1]=inp2.value.trim();
+      renderAll();
+    });
+    teamNamesDiv.appendChild(wrap);
+  }
+}
+function renderEntryCards() {
+  dataEntryCards.innerHTML = '';
+  for(let c=0; c<NUM_CLIENTS; c++) {
+    for(let t=0; t<TEAMS_PER_CLIENT; t++) {
+      const tpl = document.getElementById('entry-card-template').content.cloneNode(true);
+      tpl.querySelector('[data-avatar]').textContent = CLIENT_AVATARS[c];
+      tpl.querySelector('[data-client]').textContent = clientNames[c];
+      tpl.querySelector('[data-team]').textContent = teamNames[c][t];
+      const slider1 = tpl.querySelector('[data-q1]');
+      const slider2 = tpl.querySelector('[data-q2]');
+      const span1 = tpl.querySelector('[data-q1-val]');
+      const span2 = tpl.querySelector('[data-q2-val]');
+      slider1.value = feedbackData[currentCheckpoint][c][t].q1;
+      slider2.value = feedbackData[currentCheckpoint][c][t].q2;
+      span1.textContent = slider1.value;
+      span2.textContent = slider2.value;
+      slider1.oninput = () => {
+        feedbackData[currentCheckpoint][c][t].q1 = +slider1.value;
+        span1.textContent = slider1.value;
+        renderChartsIfVisible();
       };
-    });
-    function setTeamCount(clientId, count) {
-      data[clientId].teams = count;
-      while (data[clientId].values.length < count) {
-        data[clientId].values.push(
-          Array(CHECKPOINT_COUNT).fill().map(() => ({comfortable: '', frustrated: ''}))
-        );
-      }
-      while (data[clientId].values.length > count) data[clientId].values.pop();
+      slider2.oninput = () => {
+        feedbackData[currentCheckpoint][c][t].q2 = +slider2.value;
+        span2.textContent = slider2.value;
+        renderChartsIfVisible();
+      };
+      dataEntryCards.appendChild(tpl);
     }
-
-    function renderClientCards() {
-      const container = document.getElementById('valuesView');
-      container.innerHTML = '';
-      CLIENTS.forEach((client, ci) => {
-        const clientData = data[client.id];
-        const teamSelector = `
-          <label for="teams-${client.id}" class="block mb-2 font-medium text-[var(--neu-text2)]">Teams: </label>
-          <select id="teams-${client.id}" class="rounded-lg px-4 py-2 shadow-sm bg-[var(--neu-bg-card)] focus:ring-2 focus:ring-[var(--neu-accent)] font-semibold text-base" aria-label="Team count for ${client.name}">
-            ${TEAMS_RANGE.map(n=>`<option value="${n}" ${clientData.teams==n?'selected':''}>${n}</option>`).join('')}
-          </select>
-        `;
-        let teamBlocks = '';
-        for(let t=0; t<clientData.teams; t++) {
-          teamBlocks += `
-          <div class="mt-3 mb-4 glass-card p-3">
-            <div class="flex items-center gap-3 mb-2">
-              <span class="text-lg font-semibold text-[var(--neu-accent)]">Team ${t+1}</span>
-              <img src="https://picsum.photos/seed/${client.id}t${t+1}/36/36" alt="Team ${t+1}" class="rounded-full shadow-md border border-[var(--neu-border)]"/>
-            </div>
-            <div class="grid grid-cols-1 gap-2">
-              ${Array(CHECKPOINT_COUNT).fill().map((_,cpk) => `
-                <div class="glass-card p-2 flex flex-col gap-1" style="background:rgba(255,255,255,0.6); margin-bottom:6px;">
-                  <span class="font-medium text-xs text-[var(--neu-text2)]">Checkpoint ${cpk+1}</span>
-                  ${QUESTIONS.map(q => `
-                  <label class="flex items-center gap-2 mt-1 mb-1" for="${client.id}-t${t}-cp${cpk}-${q.key}">
-                    <span class="text-base">${q.icon}</span>
-                    <span class="text-xs font-semibold text-[var(--neu-text)]">${q.label}</span>
-                    <input 
-                      id="${client.id}-t${t}-cp${cpk}-${q.key}"
-                      type="number" min="0" max="10" step="1"
-                      class="ml-2 w-16 text-center rounded-lg border border-[var(--neu-gray)] px-2 py-1 bg-white/80 text-[var(--neu-text)] font-bold focus:ring-2 focus:ring-[var(--neu-accent)]"
-                      value="${clientData.values[t][cpk][q.key] ?? ''}"
-                      aria-label="${client.name}, Team ${t+1}, Checkpoint ${cpk+1}, ${q.label}"
-                      oninput="onInputChange('${client.id}',${t},${cpk},'${q.key}',this)"
-                    />
-                    <span class="text-[var(--neu-text2)] text-xs ml-1">/10</span>
-                  </label>
-                  <div class="w-full h-3 rounded-xl mb-1 bg-[var(--neu-gray)] relative overflow-hidden">
-                    <div class="meter-bar ${q.key=='frustrated'?'frustration':''}" style="width:${(clientData.values[t][cpk][q.key]||0)*10}%;"></div>
-                  </div>
-                  `).join('')}
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          `;
-        }
-        const cardHTML = `
-          <section data-aos="fade-up" class="neu-card flex-1 min-w-[340px] max-w-[450px] p-6 flex flex-col justify-between" aria-label="${client.name}">
-            <div class="flex items-center gap-4 mb-3 mt-1">
-              <img src="${client.img}" width="60" height="60" class="rounded-full shadow-lg border-2 border-[var(--neu-border)]" alt="${client.name} profile"/>
-              <div>
-                <span class="neu-header text-xl">${client.name}</span>
-                <div>${teamSelector}</div>
-              </div>
-            </div>
-            <div class="flex-1">
-              ${teamBlocks}
-            </div>
-          </section>
-        `;
-        container.insertAdjacentHTML('beforeend', cardHTML);
-        setTimeout(()=>{
-          document.getElementById(`teams-${client.id}`).addEventListener('change', function() {
-            setTeamCount(client.id, parseInt(this.value));
-            renderClientCards();
-            updateCharts();
-          });
-        },50);
-      });
-    }
-    window.onInputChange = function(clientId, t, cpk, qkey, el) {
-      let val = parseInt(el.value);
-      if(isNaN(val) || val < 0) val = 0;
-      if(val > 10) val = 10;
-      data[clientId].values[t][cpk][qkey] = val;
-      el.value = val;
-      const meter = el.parentElement.parentElement.querySelector('.meter-bar'+(qkey=='frustrated'?'.frustration':''));
-      if(meter) {
-        meter.style.width = (val*10) + '%';
-        gsap.to(meter, {width: (val*10)+'%', duration:0.6, ease:"power2.out"});
-      }
-      updateCharts();
-    }
-
-    const viewToggle = document.getElementById('view-toggle');
-    const valuesView = document.getElementById('valuesView');
-    const visualisationView = document.getElementById('visualisationView');
-    viewToggle.addEventListener('change', () => {
-      valuesView.classList.toggle('hidden', viewToggle.checked);
-      visualisationView.classList.toggle('hidden', !viewToggle.checked);
-      if(viewToggle.checked) updateCharts();
-    });
-
-    // --- LINE CHART LOGIC ---
-    let chartOverall, chartA, chartB, chartC;
-    function getAverages(data) {
-      let result = {};
-      CLIENTS.forEach(client=>{
-        let {teams, values} = data[client.id];
-        result[client.id] = Array(CHECKPOINT_COUNT).fill().map((_,cpk)=>({
-          comfortable: 0,
-          frustrated: 0,
-          n: 0
-        }));
-        for(let t=0; t<teams; t++) {
-          for(let cpk=0; cpk<CHECKPOINT_COUNT; cpk++) {
-            QUESTIONS.forEach(q=>{
-              let val = parseInt(values[t][cpk][q.key]);
-              if(!isNaN(val)) {
-                result[client.id][cpk][q.key] += val;
-                result[client.id][cpk].n++;
-              }
-            });
-          }
-        }
-        for(let cpk=0; cpk<CHECKPOINT_COUNT; cpk++) {
-          QUESTIONS.forEach(q=>{
-            if(result[client.id][cpk].n>0) result[client.id][cpk][q.key] = result[client.id][cpk][q.key]/result[client.id][cpk].n*2;
-            else result[client.id][cpk][q.key] = 0;
-          });
-        }
-      });
-      let overall = Array(CHECKPOINT_COUNT).fill().map(()=>({comfortable:0,frustrated:0,n:0}));
-      CLIENTS.forEach(client=>{
-        for(let cpk=0; cpk<CHECKPOINT_COUNT; cpk++) {
-          QUESTIONS.forEach(q=>{
-            overall[cpk][q.key] += result[client.id][cpk][q.key];
-          });
-          overall[cpk].n += 1;
-        }
-      });
-      for(let cpk=0; cpk<CHECKPOINT_COUNT; cpk++) {
-        QUESTIONS.forEach(q=>{
-          if(overall[cpk].n>0) overall[cpk][q.key] /= overall[cpk].n;
-          else overall[cpk][q.key] = 0;
+  }
+  entryCheckpoint.textContent = `Checkpoint ${currentCheckpoint+1}`;
+}
+prevStepBtn.onclick = ()=>{
+  if(currentCheckpoint>0){
+    currentCheckpoint--;
+    renderAll();
+  }
+};
+nextStepBtn.onclick = ()=>{
+  if(currentCheckpoint<NUM_CHECKPOINTS-1){
+    currentCheckpoint++;
+    renderAll();
+  }
+};
+function renderAll(){
+  renderStepper();
+  renderClientNames();
+  renderTeamNames();
+  renderEntryCards();
+  renderTable();
+  renderChartsIfVisible();
+}
+function getAllRows() {
+  const rows = [];
+  for(let cp=0;cp<NUM_CHECKPOINTS;cp++){
+    for(let c=0;c<NUM_CLIENTS;c++){
+      for(let t=0;t<TEAMS_PER_CLIENT;t++){
+        rows.push({
+          checkpoint: cp+1,
+          client: clientNames[c],
+          team: teamNames[c][t],
+          q1: feedbackData[cp][c][t].q1,
+          q2: feedbackData[cp][c][t].q2
         });
       }
-      return {clients: result, overall};
     }
+  }
+  return rows;
+}
+function renderTable() {
+  const rows = getAllRows();
+  dataTableBody.innerHTML = '';
+  for(let r of rows){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="py-2 px-3 text-center">${r.checkpoint}</td>
+      <td class="py-2 px-3">${r.client}</td>
+      <td class="py-2 px-3">${r.team}</td>
+      <td class="py-2 px-3 text-blue-700 dark:text-blue-200 font-bold text-center">${r.q1}</td>
+      <td class="py-2 px-3 text-pink-700 dark:text-pink-200 font-bold text-center">${r.q2}</td>
+    `;
+    dataTableBody.appendChild(tr);
+  }
+}
 
-    function updateChartsTheme() {
-      [chartOverall,chartA,chartB,chartC].forEach(chart=>{
-        if(chart) {
-          chart.options.plugins.legend.labels.color = getComputedStyle(htmlEl).getPropertyValue('--neu-text');
-          chart.options.scales.x.ticks.color = getComputedStyle(htmlEl).getPropertyValue('--neu-text');
-          chart.options.scales.y.ticks.color = getComputedStyle(htmlEl).getPropertyValue('--neu-text');
-          chart.update();
-        }
-      });
+let comfortChart, frustrationChart, meanChart, overallAvgChart, overallAvgChartFullscreen;
+function average(arr) {
+  if(arr.length===0) return 0;
+  return arr.reduce((a,b)=>a+b,0)/arr.length;
+}
+function renderChartsIfVisible() {
+  if(chartSection.classList.contains('hidden')) return;
+  renderCharts();
+}
+function renderCharts() {
+  const cpLabels = Array.from({length:NUM_CHECKPOINTS},(_,i)=>`Checkpoint ${i+1}`);
+  const comfortData = [];
+  const frustrationData = [];
+  for(let c=0;c<NUM_CLIENTS;c++){
+    comfortData[c]=[];
+    frustrationData[c]=[];
+    for(let cp=0;cp<NUM_CHECKPOINTS;cp++){
+      let q1s=[],q2s=[];
+      for(let t=0;t<TEAMS_PER_CLIENT;t++){
+        q1s.push(feedbackData[cp][c][t].q1);
+        q2s.push(feedbackData[cp][c][t].q2);
+      }
+      comfortData[c][cp]=average(q1s);
+      frustrationData[c][cp]=average(q2s);
     }
+  }
+  // Global avg for all teams (for new graph)
+  const avgComfortAllTeams = cpLabels.map((_,cp)=>
+    average([].concat(...Array.from({length:NUM_CLIENTS},(_,c)=>
+      Array.from({length:TEAMS_PER_CLIENT},(_,t)=>feedbackData[cp][c][t].q1)
+    )))
+  );
+  const avgFrustrationAllTeams = cpLabels.map((_,cp)=>
+    average([].concat(...Array.from({length:NUM_CLIENTS},(_,c)=>
+      Array.from({length:TEAMS_PER_CLIENT},(_,t)=>feedbackData[cp][c][t].q2)
+    )))
+  );
 
-    function updateCharts() {
-      const avgs = getAverages(data);
-      const theme = htmlEl.getAttribute('data-theme');
-      let bg1 = getComputedStyle(htmlEl).getPropertyValue('--neu-bg-card'),
-          txt = getComputedStyle(htmlEl).getPropertyValue('--neu-text'),
-          meter1 = getComputedStyle(htmlEl).getPropertyValue('--neu-meter1'),
-          meter2 = getComputedStyle(htmlEl).getPropertyValue('--neu-meter2'),
-          meter3 = getComputedStyle(htmlEl).getPropertyValue('--neu-meter3'),
-          danger = getComputedStyle(htmlEl).getPropertyValue('--neu-danger');
-      // Chart.js config for LINE CHARTS
-      if(chartOverall) chartOverall.destroy();
-      if(chartA) chartA.destroy(); if(chartB) chartB.destroy(); if(chartC) chartC.destroy();
-      chartOverall = new Chart(document.getElementById('chart-overall').getContext('2d'), {
-        type: 'line',
-        data: {
-          labels: Array(CHECKPOINT_COUNT).fill().map((_,i)=>'Checkpoint '+(i+1)),
-          datasets: [
-            {
-              label: QUESTIONS[0].label,
-              data: avgs.overall.map(c=>c.comfortable),
-              backgroundColor: meter1+'55',
-              borderColor: meter1,
-              tension: 0.3,
-              borderWidth: 3,
-              pointBackgroundColor: meter1,
-              pointBorderColor: '#fff',
-              fill: false
-            },
-            {
-              label: QUESTIONS[1].label,
-              data: avgs.overall.map(c=>c.frustrated),
-              backgroundColor: danger+'55',
-              borderColor: danger,
-              tension: 0.3,
-              borderWidth: 3,
-              pointBackgroundColor: danger,
-              pointBorderColor: '#fff',
-              fill: false
-            }
-          ]
+  const overallComfort = avgComfortAllTeams.slice();
+  const overallFrustration = avgFrustrationAllTeams.slice();
+
+  // Comfort line chart
+  const comfortCtx = document.getElementById('comfortChart').getContext('2d');
+  if(comfortChart) comfortChart.destroy();
+  comfortChart = new Chart(comfortCtx, {
+    type: 'line',
+    data: {
+      labels: cpLabels,
+      datasets: clientNames.map((name,ci)=>({
+        label: name,
+        data: comfortData[ci],
+        fill: false,
+        borderColor: ["#3B82F6","#FBBF24","#10B981","#F472B6"][ci%4],
+        backgroundColor: ["#3B82F6","#FBBF24","#10B981","#F472B6"][ci%4],
+        tension: 0.25,
+        pointRadius: 5,
+        pointHoverRadius:7
+      })).concat([{
+        label: 'All Clients Avg',
+        data: overallComfort,
+        fill: false,
+        borderDash: [6,6],
+        borderColor: "#64748b",
+        backgroundColor: "#64748b",
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius:6
+      }])
+    },
+    options: {
+      plugins: {
+        legend: {display:true,labels:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'}}
+      },
+      scales: {
+        y: {
+          min:0,max:10,
+          title: { display: true, text: 'Comfort', color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', stepSize:1},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#a7f3d033'}
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {color: txt, font: {size:14, weight:'bold'}}
-            },
-            title: {display:false}
-          },
-          scales: {
-            x: {ticks: {color: txt}, grid: {display:false}},
-            y: {beginAtZero:true,max:10,ticks:{color:txt,stepSize:2}}
-          }
-        }
-      });
-      [chartA, chartB, chartC] = CLIENTS.map((client, idx)=>{
-        let cid = client.id, canvasId = `chart-client${cid}`;
-        return new Chart(document.getElementById(canvasId).getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: Array(CHECKPOINT_COUNT).fill().map((_,i)=>'Checkpoint '+(i+1)),
-            datasets: [
-              {
-                label: QUESTIONS[0].label,
-                data: avgs.clients[cid].map(c=>c.comfortable),
-                backgroundColor: [meter1, meter2, meter3][idx]+'55',
-                borderColor: [meter1, meter2, meter3][idx],
-                tension: 0.3,
-                borderWidth: 3,
-                pointBackgroundColor: [meter1, meter2, meter3][idx],
-                pointBorderColor: '#fff',
-                fill: false
-              },
-              {
-                label: QUESTIONS[1].label,
-                data: avgs.clients[cid].map(c=>c.frustrated),
-                backgroundColor: danger+'55',
-                borderColor: danger,
-                tension: 0.3,
-                borderWidth: 3,
-                pointBackgroundColor: danger,
-                pointBorderColor: '#fff',
-                fill: false
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {position:'top',labels:{color:txt,font:{size:14, weight:'bold'}}},
-              title: {display:false}
-            },
-            scales: {
-              x: {ticks:{color:txt},grid:{display:false}},
-              y: {beginAtZero:true,max:10,ticks:{color:txt,stepSize:2}}
-            }
-          }
-        });
-      });
-    }
-
-    document.getElementById('exportBtn').addEventListener('click', async function() {
-      const zip = new JSZip();
-      zip.file('raw-data.json', JSON.stringify(data, null, 2));
-      let csv = 'Client,Team,Checkpoint,Question,Score\n';
-      CLIENTS.forEach(client=>{
-        let cd = data[client.id];
-        for(let t=0; t<cd.teams; t++) {
-          for(let cpk=0; cpk<CHECKPOINT_COUNT; cpk++) {
-            QUESTIONS.forEach(q=>{
-              let v = cd.values[t][cpk][q.key];
-              csv += `${client.id},${t+1},${cpk+1},${q.key},${v}\n`;
-            });
-          }
-        }
-      });
-      zip.file('raw-data.csv', csv);
-
-      const chartElements = [
-        {name:'overall', chart:chartOverall, canvas:'chart-overall'},
-        {name:'clientA', chart:chartA, canvas:'chart-clientA'},
-        {name:'clientB', chart:chartB, canvas:'chart-clientB'},
-        {name:'clientC', chart:chartC, canvas:'chart-clientC'},
-      ];
-      for(let {name,canvas} of chartElements) {
-        const el = document.getElementById(canvas);
-        if(el) {
-          let blob = await new Promise(resolve=>el.toBlob(resolve));
-          zip.file(`visualisation-${name}.png`, blob);
+        x: {
+          title: {display:true, text: "Checkpoint", color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#a7f3d033'}
         }
       }
-      zip.generateAsync({type:'blob'}).then(function(content) {
-        saveAs(content, 'pressure-meter-export.zip');
-      });
-    });
+    }
+  });
 
-    AOS.init({duration:800, once:true});
-    renderClientCards();
-    updateCharts();
-    document.querySelectorAll('.fade-in').forEach(el=>gsap.to(el, {opacity:1, duration:1, y:0, delay:0.1}));
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{
-      htmlEl.setAttribute('data-theme', e.matches ? 'dark' : 'light');
-      setTimeout(()=>updateChartsTheme(), 100);
+  // Frustration line chart
+  const frustrationCtx = document.getElementById('frustrationChart').getContext('2d');
+  if(frustrationChart) frustrationChart.destroy();
+  frustrationChart = new Chart(frustrationCtx, {
+    type: 'line',
+    data: {
+      labels: cpLabels,
+      datasets: clientNames.map((name,ci)=>({
+        label: name,
+        data: frustrationData[ci],
+        fill: false,
+        borderColor: ["#60A5FA","#FDE68A","#34D399","#F9A8D4"][ci%4],
+        backgroundColor: ["#60A5FA","#FDE68A","#34D399","#F9A8D4"][ci%4],
+        tension: 0.25,
+        pointRadius: 5,
+        pointHoverRadius:7
+      })).concat([{
+        label: 'All Clients Avg',
+        data: overallFrustration,
+        fill: false,
+        borderDash: [6,6],
+        borderColor: "#64748b",
+        backgroundColor: "#64748b",
+        borderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius:6
+      }])
+    },
+    options: {
+      plugins: {
+        legend: {display:true,labels:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'}}
+      },
+      scales: {
+        y: {
+          min:0,max:10,
+          title: { display: true, text: 'Frustration', color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', stepSize:1},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#fbcfe833'}
+        },
+        x: {
+          title: {display:true, text: "Checkpoint", color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#fbcfe833'}
+        }
+      }
+    }
+  });
+
+  // Means by client (bar chart)
+  const meanCtx = document.getElementById('meanChart').getContext('2d');
+  if(meanChart) meanChart.destroy();
+  const meanComfort = clientNames.map((_,c)=>
+    average([].concat(...feedbackData.map((cp,i)=>[feedbackData[i][c][0].q1,feedbackData[i][c][1].q1])))
+  );
+  const meanFrustration = clientNames.map((_,c)=>
+    average([].concat(...feedbackData.map((cp,i)=>[feedbackData[i][c][0].q2,feedbackData[i][c][1].q2])))
+  );
+  meanChart = new Chart(meanCtx, {
+    type: 'bar',
+    data: {
+      labels: clientNames,
+      datasets: [
+        {
+          label: "Mean Comfort",
+          data: meanComfort,
+          backgroundColor: "#3B82F6"
+        },
+        {
+          label: "Mean Frustration",
+          data: meanFrustration,
+          backgroundColor: "#F472B6"
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: {display:true,labels:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'}}
+      },
+      scales: {
+        y: {
+          min:0,max:10,
+          title: { display: true, text: 'Score', color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', stepSize:1},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#a7f3d033'}
+        },
+        x: {
+          title: {display:true, text: "Client", color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#a7f3d033'}
+        }
+      }
+    }
+  });
+
+  // NEW: Overall Average Line Chart (all teams, both metrics)
+  const overallAvgCtx = document.getElementById('overallAvgChart').getContext('2d');
+  if(overallAvgChart) overallAvgChart.destroy();
+  overallAvgChart = new Chart(overallAvgCtx, {
+    type: 'line',
+    data: {
+      labels: cpLabels,
+      datasets: [
+        {
+          label: "Avg Comfort",
+          data: avgComfortAllTeams,
+          fill: false,
+          borderColor: "#3B82F6",
+          backgroundColor: "#3B82F6",
+          tension: 0.25,
+          pointRadius: 5, pointHoverRadius:7
+        },
+        {
+          label: "Avg Frustration",
+          data: avgFrustrationAllTeams,
+          fill: false,
+          borderColor: "#F472B6",
+          backgroundColor: "#F472B6",
+          tension: 0.25,
+          pointRadius: 5, pointHoverRadius:7
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: {display:true,labels:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'}}
+      },
+      scales: {
+        y: {
+          min:0,max:10,
+          title: { display: true, text: 'Score', color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', stepSize:1},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#fbcfe833'}
+        },
+        x: {
+          title: {display:true, text: "Checkpoint", color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b', font: {weight:'bold',size:14}},
+          ticks:{color:getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#f1f5f9':'#1e293b'},
+          grid: {color: getComputedStyle(document.body).getPropertyValue('--tw-text-opacity')?'#33415533':'#fbcfe833'}
+        }
+      }
+    }
+  });
+
+  // Render enlarged (fullscreen) chart if open
+  if(fullscreenModal.classList.contains('active')){
+    renderFullscreenOverallAvgChart(avgComfortAllTeams, avgFrustrationAllTeams, cpLabels);
+  }
+}
+
+function renderFullscreenOverallAvgChart(avgComfortAllTeams, avgFrustrationAllTeams, cpLabels){
+  if(overallAvgChartFullscreen) overallAvgChartFullscreen.destroy && overallAvgChartFullscreen.destroy();
+  const ctx = document.getElementById('overallAvgChartFullscreen').getContext('2d');
+  if(window._fullscreenChartObj) window._fullscreenChartObj.destroy();
+  window._fullscreenChartObj = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: cpLabels,
+      datasets: [
+        {
+          label: "Avg Comfort",
+          data: avgComfortAllTeams,
+          fill: false,
+          borderColor: "#3B82F6",
+          backgroundColor: "#3B82F6",
+          tension: 0.25,
+          pointRadius: 8, pointHoverRadius:14
+        },
+        {
+          label: "Avg Frustration",
+          data: avgFrustrationAllTeams,
+          fill: false,
+          borderColor: "#F472B6",
+          backgroundColor: "#F472B6",
+          tension: 0.25,
+          pointRadius: 8, pointHoverRadius:14
+        }
+      ]
+    },
+    options: {
+      plugins: {
+        legend: {display:true,labels:{color:'#f1f5f9'}}
+      },
+      scales: {
+        y: {
+          min:0,max:10,
+          title: { display: true, text: 'Score', color: '#f1f5f9', font: {weight:'bold',size:22}},
+          ticks:{color:'#f1f5f9', stepSize:1, font:{size:18}},
+          grid: {color:'#33415555'}
+        },
+        x: {
+          title: {display:true, text: "Checkpoint", color: '#f1f5f9', font: {weight:'bold',size:22}},
+          ticks:{color:'#f1f5f9', font:{size:18}},
+          grid: {color:'#33415555'}
+        }
+      }
+    }
+  });
+}
+
+showTableBtn.onclick = ()=>{
+  showTableBtn.classList.add('active-step');
+  showChartBtn.classList.remove('active-step');
+  dataTableSection.classList.remove('hidden');
+  chartSection.classList.add('hidden');
+};
+showChartBtn.onclick = ()=>{
+  showChartBtn.classList.add('active-step');
+  showTableBtn.classList.remove('active-step');
+  dataTableSection.classList.add('hidden');
+  chartSection.classList.remove('hidden');
+  setTimeout(renderCharts,150);
+};
+exportCsvBtn.onclick = ()=>{
+  let rows = getAllRows();
+  let csv = 'Checkpoint,Client,Team,Comfort,Perceived Frustration\n';
+  for(let r of rows) {
+    csv += [r.checkpoint,`"${r.client}"`,"\""+r.team+"\"",r.q1,r.q2].join(',')+'\n';
+  }
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  saveAs(blob, 'client-pressure-feedback.csv');
+};
+exportPngBtn.onclick = ()=>{
+  let charts = [
+    {id:'comfortChart',name:'avg-comfort.png'},
+    {id:'frustrationChart',name:'avg-frustration.png'},
+    {id:'meanChart',name:'means-by-client.png'},
+    {id:'overallAvgChart',name:'overall-avg.png'}
+  ];
+  charts.forEach(({id,name})=>{
+    let canvas = document.getElementById(id);
+    if(canvas) canvas.toBlob(blob=>{
+      saveAs(blob,name);
     });
-    window.addEventListener('input', ()=>{
-      if(viewToggle.checked) updateCharts();
+  });
+};
+// FULLSCREEN CHART FUNCTIONALITY
+if(enlargeOverallGraphBtn) {
+  enlargeOverallGraphBtn.onclick = function() {
+    fullscreenModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    // Compute averages and labels for the modal chart
+    const cpLabels = Array.from({length:NUM_CHECKPOINTS},(_,i)=>`Checkpoint ${i+1}`);
+    const avgComfortAllTeams = cpLabels.map((_,cp)=>
+      average([].concat(...Array.from({length:NUM_CLIENTS},(_,c)=>
+        Array.from({length:TEAMS_PER_CLIENT},(_,t)=>feedbackData[cp][c][t].q1)
+      )))
+    );
+    const avgFrustrationAllTeams = cpLabels.map((_,cp)=>
+      average([].concat(...Array.from({length:NUM_CLIENTS},(_,c)=>
+        Array.from({length:TEAMS_PER_CLIENT},(_,t)=>feedbackData[cp][c][t].q2)
+      )))
+    );
+    renderFullscreenOverallAvgChart(avgComfortAllTeams, avgFrustrationAllTeams, cpLabels);
+  };
+}
+if(fullscreenModalClose) {
+  fullscreenModalClose.onclick = function(){
+    fullscreenModal.classList.remove('active');
+    document.body.style.overflow = '';
+    if(window._fullscreenChartObj) window._fullscreenChartObj.destroy();
+  };
+}
+if(saveFullscreenGraphBtn) {
+  saveFullscreenGraphBtn.onclick = function(){
+    let canvas = document.getElementById('overallAvgChartFullscreen');
+    if(canvas) canvas.toBlob(blob=>{
+      saveAs(blob, 'overall-avg-fullscreen.png');
     });
-    window.addEventListener('resize', ()=>{
-      if(viewToggle.checked) updateCharts();
-    });
-  </script>
+  };
+}
+
+const toggleDark = document.getElementById('toggle-dark');
+const themeIcon = document.getElementById('theme-icon');
+toggleDark.onclick = ()=>{
+  const newTheme = document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme',newTheme);
+  if(newTheme==='dark') {
+    themeIcon.textContent='🌚';
+    document.body.classList.add('dark');
+    document.body.classList.remove('light');
+  } else {
+    themeIcon.textContent='🌞';
+    document.body.classList.remove('dark');
+    document.body.classList.add('light');
+  }
+  renderChartsIfVisible();
+};
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  document.documentElement.setAttribute('data-theme','dark');
+  themeIcon.textContent='🌚';
+  document.body.classList.add('dark');
+}
+renderAll();
+</script>
 </body>
 </html>
